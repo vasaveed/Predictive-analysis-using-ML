@@ -17,5 +17,6 @@ Applied one-hot encoding to categorical columns (Gender, Income_Level, Product_V
 Combined with numeric features using ColumnTransformer, ensuring all inputs are numerical.
 Benefits
 Reproducible: Same preprocessing and feature selection applied to both train and test data
-
+output:
+<!-- Uploading "prediction analysis output.jpg"... -->
 
