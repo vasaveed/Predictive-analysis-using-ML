@@ -18,5 +18,6 @@ Combined with numeric features using ColumnTransformer, ensuring all inputs are 
 Benefits
 Reproducible: Same preprocessing and feature selection applied to both train and test data
 output:
-<!-- Uploading "prediction analysis output.jpg"... -->
+![Image](https://github.com/user-attachments/assets/a598fb2a-eb3a-4487-8bfb-e4d9e452e6b1)
+
 
