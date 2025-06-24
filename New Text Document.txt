@@ -1,0 +1,77 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.feature_selection import SelectKBest, f_classif, f_regression
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, classification_report, mean_squared_error, r2_score
+
+# 1. Create synthetic dataset
+np.random.seed(42)
+n_samples = 100
+
+data = {
+    "Age": np.random.randint(18, 60, size=n_samples),
+    "Gender": np.random.choice(["Male", "Female"], size=n_samples),
+    "Income_Level": np.random.choice(["Low", "Medium", "High"], size=n_samples),
+    "Visit_Frequency": np.random.randint(1, 20, size=n_samples),
+    "Time_on_Site": np.round(np.random.uniform(1.0, 15.0, size=n_samples), 2),
+    "Product_Viewed": np.random.choice(["A", "B", "C", "D"], size=n_samples),
+    "Campaign_Response": np.random.choice(["Yes", "No"], size=n_samples, p=[0.6, 0.4]),
+}
+
+df = pd.DataFrame(data)
+
+# Columns to encode
+categorical_cols = ["Gender", "Income_Level", "Product_Viewed"]
+
+# Preprocessing: one-hot encode categorical features
+preprocessor = ColumnTransformer(
+    transformers=[("cat", OneHotEncoder(drop="first"), categorical_cols)],
+    remainder="passthrough"  # numeric columns are passed as-is
+)
+
+# --------- Classification ---------
+X_cls = df.drop("Campaign_Response", axis=1)
+y_cls = df["Campaign_Response"].map({"Yes": 1, "No": 0})
+
+X_train_c, X_test_c, y_train_c, y_test_c = train_test_split(
+    X_cls, y_cls, test_size=0.2, random_state=42, stratify=y_cls
+)
+
+clf_pipeline = Pipeline([
+    ("preprocess", preprocessor),
+    ("select", SelectKBest(score_func=f_classif, k="all")),  # feature selection
+    ("model", RandomForestClassifier(random_state=42))
+])
+
+clf_pipeline.fit(X_train_c, y_train_c)
+y_pred_c = clf_pipeline.predict(X_test_c)
+
+print("=== Classification Results ===")
+print("Accuracy:", accuracy_score(y_test_c, y_pred_c))
+print(classification_report(y_test_c, y_pred_c))
+
+# --------- Regression ---------
+X_reg = df.drop(["Time_on_Site", "Campaign_Response"], axis=1)
+y_reg = df["Time_on_Site"]
+
+X_train_r, X_test_r, y_train_r, y_test_r = train_test_split(
+    X_reg, y_reg, test_size=0.2, random_state=42
+)
+
+reg_pipeline = Pipeline([
+    ("preprocess", preprocessor),
+    ("select", SelectKBest(score_func=f_regression, k="all")),  # feature selection
+    ("model", RandomForestRegressor(random_state=42))
+])
+
+reg_pipeline.fit(X_train_r, y_train_r)
+y_pred_r = reg_pipeline.predict(X_test_r)
+
+print("\n=== Regression Results ===")
+print("Mean Squared Error:", mean_squared_error(y_test_r, y_pred_r))
+print("R2 Score:", r2_score(y_test_r, y_pred_r))
